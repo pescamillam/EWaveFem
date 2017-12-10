@@ -21,6 +21,8 @@ import com.pescamillam.fem.element.Point;
 
 public class Application {
     
+    private static final BigReal FOUR = new BigReal("4");
+    private static final BigReal TWELVE = new BigReal("12");
     private static final BigReal TWO_BIG_REAL = new BigReal("2");
     private static final BigReal MINUS_ONE = new BigReal("-1");
 
@@ -558,12 +560,15 @@ public class Application {
 //            }
 //            System.out.println();
 //        }
-
+        
+        
         FieldMatrix<BigReal> massFieldMatrix = MatrixUtils.createFieldMatrix(massMatrix);
+        massFieldMatrix = massFieldMatrix.scalarMultiply(density.multiply(thickness).multiply(area).divide(TWELVE));
         System.out.println("Phase 2 time: " + (System.nanoTime() - startTime)/1000000000.0);
-        FieldMatrix<BigReal> inverseMassMatrix = new FieldLUDecomposition<BigReal>(MatrixUtils.createFieldMatrix(massMatrix)).getSolver().getInverse();
+        FieldMatrix<BigReal> inverseMassMatrix = new FieldLUDecomposition<BigReal>(massFieldMatrix).getSolver().getInverse();
         System.out.println("Phase 3 time: " + (System.nanoTime() - startTime)/1000000000.0);
         FieldMatrix<BigReal> stiffnessFieldMatrix = MatrixUtils.createFieldMatrix(stiffnessMatrix);
+        stiffnessFieldMatrix = stiffnessFieldMatrix.scalarMultiply(thickness.multiply(elasticity).divide(FOUR.multiply(area).multiply(poisson1pv).multiply(poisson1m2v)));
         System.out.println("Phase 4 time: " + (System.nanoTime() - startTime)/1000000000.0);
 
         
@@ -697,7 +702,7 @@ public class Application {
 
             for (int m = 0; m <= numY; m++) {
                 for (int n = 0; n <= numX; n++) {
-                    graphics.drawOval(n*30 + displacement[i].getData()[m*numX+n][0].bigDecimalValue().multiply(new BigDecimal("300")).intValue(), m*30 + displacement[i].getData()[m*numX+n+1][0].bigDecimalValue().multiply(new BigDecimal("300")).intValue(), 10, 10);
+                    graphics.drawOval(n*30 + displacement[i].getData()[m*numX+n][0].bigDecimalValue().intValue(), m*30 + displacement[i].getData()[m*numX+n+1][0].bigDecimalValue().intValue(), 10, 10);
                 }
             }
             

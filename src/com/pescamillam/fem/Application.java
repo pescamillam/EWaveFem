@@ -26,8 +26,8 @@ public class Application {
     private static final BigReal TWO_BIG_REAL = new BigReal("2");
     private static final BigReal MINUS_ONE = new BigReal("-1");
 
-    private static final int numX = 15;
-    private static final int numY = 15;
+    private static final int numX = 10;
+    private static final int numY = 3;
     
     public static void main(String[] args) {
         Long startTime = System.nanoTime();
@@ -38,14 +38,14 @@ public class Application {
         //elasticity module E
         BigReal elasticity = new BigReal("30000000");
         //density p
-        BigReal density = new BigReal(0.00073);
+        BigReal density = new BigReal("0.00073");
         //Area A
         BigReal area = new BigReal("1");
         //poisson ratio v
         BigReal poisson = new BigReal("0.3");
         
         //delta time
-        BigReal deltaTime = new BigReal("0.025");
+        BigReal deltaTime = new BigReal("0.00025");
         BigReal deltaTimeSquare = deltaTime.multiply(deltaTime); 
         
         //(1-v)
@@ -564,8 +564,10 @@ public class Application {
         
         FieldMatrix<BigReal> massFieldMatrix = MatrixUtils.createFieldMatrix(massMatrix);
         massFieldMatrix = massFieldMatrix.scalarMultiply(density.multiply(thickness).multiply(area).divide(TWELVE));
+        printMatrix(massFieldMatrix);
         System.out.println("Phase 2 time: " + (System.nanoTime() - startTime)/1000000000.0);
         FieldMatrix<BigReal> inverseMassMatrix = new FieldLUDecomposition<BigReal>(massFieldMatrix).getSolver().getInverse();
+        printMatrix(inverseMassMatrix);
         System.out.println("Phase 3 time: " + (System.nanoTime() - startTime)/1000000000.0);
         FieldMatrix<BigReal> stiffnessFieldMatrix = MatrixUtils.createFieldMatrix(stiffnessMatrix);
         stiffnessFieldMatrix = stiffnessFieldMatrix.scalarMultiply(thickness.multiply(elasticity).divide(FOUR.multiply(area).multiply(poisson1pv).multiply(poisson1m2v)));
@@ -584,13 +586,10 @@ public class Application {
         //acceleration = mass inverse * (F0)
         
         //force vectors
-        BigReal ONE_HUNDRED = new BigReal("100");
+        BigReal ONE_HUNDRED = new BigReal("0.000000001");
         BigReal[] force1Vector = new BigReal[2*numX*numY+2*numX+2*numY+2];
         Arrays.fill(force1Vector, BigReal.ZERO);
-        force1Vector[5] = ONE_HUNDRED;
-        force1Vector[4] = ONE_HUNDRED;
         force1Vector[6] = ONE_HUNDRED;
-        force1Vector[7] = ONE_HUNDRED;
         BigReal[] force0Vector = new BigReal[2*numX*numY+2*numX+2*numY+2];
         Arrays.fill(force0Vector, BigReal.ZERO);
         FieldMatrix<BigReal>[] force = new FieldMatrix[100];
@@ -612,7 +611,8 @@ public class Application {
 
         //displacement -1
         FieldMatrix<BigReal> displacementM1 = acceleration.scalarMultiply(deltaTime.multiply(deltaTime).divide(new BigReal("2")));
-
+//        System.out.println("=== d-1 ===");
+//        printMatrix(displacementM1);
 //        System.out.println("==== displacement -1 ====");
 //        for (BigReal[] column : displacementM1.getData()) {
 //            for (BigReal unit : column) {
@@ -626,19 +626,36 @@ public class Application {
         Arrays.fill(displacement0, BigReal.ZERO);
         FieldMatrix<BigReal>[] displacement = new FieldMatrix[100];
         displacement[0] = MatrixUtils.createColumnFieldMatrix(displacement0);
+        for (int i = 0; i < numY; i++) {
+            displacement[0].setEntry(i*numX, 0, BigReal.ZERO);
+            displacement[0].setEntry(i*numX+1, 0, BigReal.ZERO);
+        }
 
         displacement[1] = inverseMassMatrix.multiply(
                 force[0].scalarMultiply(deltaTime.multiply(deltaTime))
                 //.add(massFieldMatrix.scalarMultiply(TWO_BIG_REAL).add(stiffnessFieldMatrix.scalarMultiply(deltaTime.multiply(deltaTime))).multiply(displacementM1))
                 .add(massFieldMatrix.multiply(displacementM1).scalarMultiply(MINUS_ONE))
                 );
+        for (int i = 0; i < numY; i++) {
+            displacement[1].setEntry(i*numX, 0, BigReal.ZERO);
+            displacement[1].setEntry(i*numX+1, 0, BigReal.ZERO);
+        }
         for (int i = 2; i < 100; i++) {
             displacement[i] = inverseMassMatrix.multiply(
-                        force[i-1].scalarMultiply(deltaTime.multiply(deltaTime)).add(
-                                massFieldMatrix.scalarMultiply(TWO_BIG_REAL).add(stiffnessFieldMatrix.scalarMultiply(deltaTime.multiply(deltaTime).multiply(MINUS_ONE))).multiply(displacement[i-1])
+                        force[i-1].scalarMultiply(deltaTimeSquare).add(
+                                massFieldMatrix.scalarMultiply(TWO_BIG_REAL).add(stiffnessFieldMatrix.scalarMultiply(deltaTimeSquare.multiply(MINUS_ONE))).multiply(displacement[i-1])
                                 ).add(massFieldMatrix.multiply(displacement[i-2]).scalarMultiply(MINUS_ONE))
                     );
-            System.out.println(i);
+            for (int j = 0; j < numY; j++) {
+                displacement[i].setEntry(j*numX, 0, BigReal.ZERO);
+                displacement[i].setEntry(j*numX+1, 0, BigReal.ZERO);
+            }
+            for (int j = 0; j < numX; j++) {
+                displacement[i].setEntry((numY-1)*numX+j, 0, BigReal.ZERO);
+                displacement[i].setEntry((numY-1)*numX+j+1, 0, BigReal.ZERO);
+            }
+//            System.out.println("==== " + i + " ====");
+//            printMatrix(displacement[i]);
         }
         
         System.out.println("Total time: " + (System.nanoTime() - startTime)/1000000000.0 + "s");
@@ -647,16 +664,16 @@ public class Application {
         System.out.println(elasticity);
     }
 
-//    private static void printMatrix(FieldMatrix<BigReal> fieldMatrix) {
-//        System.out.println("====  ====");
+    private static void printMatrix(FieldMatrix<BigReal> fieldMatrix) {
+        System.out.println("====  ====");
 //        for (BigReal[] column : fieldMatrix.getData()) {
 //            for (BigReal unit : column) {
 //                System.out.print(unit.bigDecimalValue() + "\t");
 //            }
 //            System.out.println();
 //        }
-//        
-//    }
+        
+    }
 
     private static void printElements(List<Cst> elements, FieldMatrix<BigReal>[] displacement) {
         final String title = "Test Window";
@@ -720,7 +737,7 @@ public class Application {
             bufferStrategy.show();
             graphics.dispose();
             try {
-                Thread.sleep(200L);
+                Thread.sleep(5000L);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

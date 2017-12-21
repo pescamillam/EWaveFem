@@ -4,14 +4,11 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
-import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import javax.swing.JFrame;
 
@@ -22,38 +19,49 @@ import org.apache.commons.math3.util.BigReal;
 
 import com.pescamillam.fem.element.Cst;
 import com.pescamillam.fem.element.Point;
+import com.pescamillam.fem.util.UtilWriter;
 
 public class Application {
     
-    private static final Logger LOGGER = Logger.getLogger(Application.class.getName());
-    
+    private static final int NUM_TIMES = 100;
     private static final BigReal FOUR = new BigReal("4");
     private static final BigReal TWELVE = new BigReal("12");
-    private static final BigReal TWO_BIG_REAL = new BigReal("2");
+    private static final BigReal TWO = new BigReal("2");
     private static final BigReal MINUS_ONE = new BigReal("-1");
 
-    private static final int numX = 10;
-    private static final int numY = 10;
+    private static final int numX = 8;
+    private static final int numY = 8;
     
+    private static DecimalFormat df;
+    
+    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-        setLogger();
         Long startTime = System.nanoTime();
+        setDecimalFormat();
         
         //parameters
         //thickness t
         BigReal thickness = new BigReal("1");
         //elasticity module E
-        BigReal elasticity = new BigReal("30000000");
+        BigReal elasticity = new BigReal("3000000");
         //density p
         BigReal density = new BigReal("0.00073");
         //Area A
-        BigReal area = new BigReal("2000");
+        BigReal area = new BigReal("450");
         //poisson ratio v
         BigReal poisson = new BigReal("0.3");
         
         //delta time
-        BigReal deltaTime = new BigReal("0.00025");
+        BigReal deltaTime = new BigReal("0.00005");
         BigReal deltaTimeSquare = deltaTime.multiply(deltaTime); 
+
+        writeToFile("=== Constants ===");
+        writeToFile("area: " + area.bigDecimalValue().toPlainString());
+        writeToFile("thickness: " + thickness.bigDecimalValue().toPlainString());
+        writeToFile("elasticity: " + elasticity.bigDecimalValue().toPlainString());
+        writeToFile("density: " + density.bigDecimalValue().toPlainString());
+        writeToFile("poisson: " + poisson.bigDecimalValue().toPlainString());
+        writeToFile("\n\n");
         
         //(1-v)
         BigReal poisson1mv = poisson.negate().add(new BigReal("1"));
@@ -69,7 +77,7 @@ public class Application {
         
         //variables
         //acceleration
-        FieldMatrix<BigReal> acceleration;
+        FieldMatrix<BigReal>[] acceleration = new FieldMatrix[NUM_TIMES];
 
         List<Cst> elements = new ArrayList<>();
         
@@ -100,16 +108,16 @@ public class Application {
         //beta i: y_j - y_m
         BigReal betaIel1 = new BigReal("0");
         //beta j: y_m - y_i
-        BigReal betaJel1 = new BigReal("100");
+        BigReal betaJel1 = new BigReal("30");
         //beta m: y_i - y_j
-        BigReal betaMel1 = new BigReal("-100");
+        BigReal betaMel1 = new BigReal("-30");
         
         //gamma_i: x_m - x_j
-        BigReal gammaIel1 = new BigReal("-100");
+        BigReal gammaIel1 = new BigReal("-30");
         //gamma_j: x_i - x_m
         BigReal gammaJel1 = new BigReal("0");
         //gamma_m: x_j - x_i
-        BigReal gammaMel1 = new BigReal("100");
+        BigReal gammaMel1 = new BigReal("30");
         
         //1-1
         BigReal m11el1 = betaIel1.multiply(betaIel1).multiply(poisson1mv).add(gammaIel1.multiply(gammaIel1).multiply(poisson1m2vo2));
@@ -200,18 +208,18 @@ public class Application {
         //     m
         
         //beta i: y_j - y_m
-        BigReal betaIel2 = new BigReal("-100");
+        BigReal betaIel2 = new BigReal("-30");
         //beta j: y_m - y_i
-        BigReal betaJel2 = new BigReal("100");
+        BigReal betaJel2 = new BigReal("30");
         //beta m: y_i - y_j
         BigReal betaMel2 = new BigReal("0");
         
         //gamma_i: x_m - x_j
         BigReal gammaIel2 = new BigReal("0");
         //gamma_j: x_i - x_m
-        BigReal gammaJel2 = new BigReal("-100");
+        BigReal gammaJel2 = new BigReal("-30");
         //gamma_m: x_j - x_i
-        BigReal gammaMel2 = new BigReal("100");
+        BigReal gammaMel2 = new BigReal("30");
         
         //1-1
         BigReal m11el2 = betaIel2.multiply(betaIel2).multiply(poisson1mv).add(gammaIel2.multiply(gammaIel2).multiply(poisson1m2vo2));
@@ -305,117 +313,104 @@ public class Application {
                         m33el2, m34el2, m35el2, m36el2, m43el2, m44el2, m45el2, m46el2, m55el2,
                         m56el2, m65el2, m66el2, i, j);
 
-                BigReal constant = new BigReal("1");
-                BigReal two = new BigReal(2).multiply(constant);
-                BigReal zero = new BigReal(0);
-                BigReal one = constant;
+                setElementOneMassMatrix(massMatrix, i, j, TWO, BigReal.ZERO, BigReal.ONE);
 
-                setElementOneMassMatrix(massMatrix, i, j, two, zero, one);
-
-                setElementTwoMassMatrix(massMatrix, i, j, two, zero, one);
+                setElementTwoMassMatrix(massMatrix, i, j, TWO, BigReal.ZERO, BigReal.ONE);
             }
-            
         }
-        System.out.println("Phase 1 time: " + (System.nanoTime() - startTime)/1000000000.0);
 
         FieldMatrix<BigReal> massFieldMatrix = MatrixUtils.createFieldMatrix(massMatrix);
         massFieldMatrix = massFieldMatrix.scalarMultiply(density.multiply(thickness).multiply(area).divide(TWELVE));
+        
 
+        writeToFile("=== Starting inversing mass matrix ===");
+        Long startInverseTime = System.nanoTime();
         FieldMatrix<BigReal> inverseMassMatrix = new FieldLUDecomposition<BigReal>(massFieldMatrix).getSolver().getInverse();
+        writeToFile("=== Finished inversing mass matrix " + (System.nanoTime() - startInverseTime)/1000000000.0 + "s ===");
 
         FieldMatrix<BigReal> stiffnessFieldMatrix = MatrixUtils.createFieldMatrix(stiffnessMatrix);
         stiffnessFieldMatrix = stiffnessFieldMatrix.scalarMultiply(thickness.multiply(elasticity).divide(FOUR.multiply(area).multiply(poisson1pv).multiply(poisson1m2v)));
-
+        writeToFile("=== stiffness matrix ===");
+        printMatrix(stiffnessFieldMatrix);
         
         //force vectors
-        BigReal ONE_HUNDRED = new BigReal("1000");
+        BigReal ONE_HUNDRED = new BigReal("30000");
         BigReal[] force1Vector = new BigReal[2*numX*numY+2*numX+2*numY+2];
         Arrays.fill(force1Vector, BigReal.ZERO);
-        force1Vector[4] = ONE_HUNDRED;
-        force1Vector[5] = ONE_HUNDRED;
+//        force1Vector[4] = ONE_HUNDRED;
+//        force1Vector[5] = ONE_HUNDRED;
         BigReal[] force0Vector = new BigReal[2*numX*numY+2*numX+2*numY+2];
         Arrays.fill(force0Vector, BigReal.ZERO);
-//        force0Vector[4] = ONE_HUNDRED;
-//        force0Vector[10] = ONE_HUNDRED;
-        FieldMatrix<BigReal>[] force = new FieldMatrix[100];
-        force[0] = MatrixUtils.createColumnFieldMatrix(force0Vector);
-//        printMatrix(force[0]);
-        for (int i = 1; i < 100; i++) {
-            force[i] = MatrixUtils.createColumnFieldMatrix(force1Vector);
+        force0Vector[5] = ONE_HUNDRED;
+
+//        for (int i = 0; i < numX + 1; i++) {
+//            force0Vector[2*i+1] = ONE_HUNDRED;
+//        }
+        FieldMatrix<BigReal>[] force = new FieldMatrix[NUM_TIMES];
+        for (int i = 0; i < NUM_TIMES; i++) {
+            force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
+//                    .scalarMultiply(new BigReal(Math.sin(i/10.0)))
+                    ;
         }
 
         //acceleration = mass inverse * (F0 - [K]{d0}) as {d0} = 0 
         //acceleration = mass inverse * (F0)
-        acceleration = inverseMassMatrix.multiply(force[0]);
-//        printMatrix(acceleration);
-        
-
-//        System.out.println("==== acceleration 0 ====");
-//        for (BigReal[] column : acceleration.getData()) {
-//            for (BigReal unit : column) {
-//                System.out.print(unit.bigDecimalValue() + "\t");
-//            }
-//            System.out.println();
-//        }
+        writeToFile("=== acceleration 0 ===");
+        acceleration[0] = inverseMassMatrix.multiply(force[0]);
+        printMatrix(acceleration[0]);
 
         //displacement -1
-        FieldMatrix<BigReal> displacementM1 = acceleration.scalarMultiply(deltaTimeSquare.divide(new BigReal("2")));
-//        LOGGER.info("displacementM1");
-//        printMatrix(displacementM1);
-//        System.out.println("=== d-1 ===");
-//        printMatrix(displacementM1);
-//        System.out.println("==== displacement -1 ====");
-//        for (BigReal[] column : displacementM1.getData()) {
-//            for (BigReal unit : column) {
-//                System.out.print(unit.bigDecimalValue() + "\t");
-//            }
-//            System.out.println();
-//        }
+        FieldMatrix<BigReal> displacementM1 = acceleration[0].scalarMultiply(deltaTimeSquare.divide(new BigReal("2")));
+
+        writeToFile("=== displacement -1 ===");
+        printMatrix(displacementM1);
         
         //displacement 1
         BigReal[] displacement0 = new BigReal[2*numX*numY+2*numX+2*numY+2];
         Arrays.fill(displacement0, BigReal.ZERO);
-        FieldMatrix<BigReal>[] displacement = new FieldMatrix[100];
+//        displacement0[5] = BigReal.ONE;
+        FieldMatrix<BigReal>[] displacement = new FieldMatrix[NUM_TIMES];
+        FieldMatrix<BigReal>[] speed = new FieldMatrix[NUM_TIMES];
         displacement[0] = MatrixUtils.createColumnFieldMatrix(displacement0);
-//        for (int i = 0; i < numY; i++) {
-//            displacement[0].setEntry(i*numX, 0, BigReal.ZERO);
-//            displacement[0].setEntry(i*numX+1, 0, BigReal.ZERO);
-//        }
 
+        writeToFile("=== displacement 0 ===");
+        printMatrix(displacement[0]);
+        
         displacement[1] = inverseMassMatrix.multiply(
                 force[0].scalarMultiply(deltaTimeSquare)
                 //.add(massFieldMatrix.scalarMultiply(TWO_BIG_REAL).add(stiffnessFieldMatrix.scalarMultiply(deltaTime.multiply(deltaTime))).multiply(displacementM1))
                 .add(massFieldMatrix.multiply(displacementM1).scalarMultiply(MINUS_ONE))
                 );
 
-        for (int i = 2; i < 100; i++) {
+//        writeToFile("=== displacement 1 ===");
+//        printMatrix(displacement[1]);
+
+        for (int i = 2; i < NUM_TIMES; i++) {
             
             displacement[i] = inverseMassMatrix.multiply(force[i-1].scalarMultiply(deltaTimeSquare)
-                                .add(massFieldMatrix.scalarMultiply(TWO_BIG_REAL).add(stiffnessFieldMatrix.scalarMultiply(deltaTimeSquare.multiply(MINUS_ONE))).multiply(displacement[i-1]))
+                                .add(massFieldMatrix.scalarMultiply(TWO).add(stiffnessFieldMatrix.scalarMultiply(deltaTimeSquare.multiply(MINUS_ONE))).multiply(displacement[i-1]))
                                 .add(massFieldMatrix.multiply(displacement[i-2]).scalarMultiply(MINUS_ONE))
                                 );
+            
+//            writeToFile("==== displacement " + i + " ====");
+//            printMatrix(displacement[i]);
+            
+            speed[i-1] = displacement[i].add(displacement[i-2].scalarMultiply(MINUS_ONE)).scalarMultiply(BigReal.ONE.divide(TWO.multiply(deltaTime)));
 
-//            FieldMatrix<BigReal> a = massFieldMatrix.scalarMultiply(TWO_BIG_REAL);
-//            FieldMatrix<BigReal> b = stiffnessFieldMatrix.scalarMultiply(deltaTimeSquare);
-//            FieldMatrix<BigReal> c = a.add(b.scalarMultiply(new BigReal("-1")));
-//            FieldMatrix<BigReal> d = c.multiply(displacement[i-1]);
-//            FieldMatrix<BigReal> e = massFieldMatrix.multiply(displacement[i-2]);
-//            FieldMatrix<BigReal> f = force[i-1].scalarMultiply(deltaTimeSquare);
-//            FieldMatrix<BigReal> g = f.add(d).add(e.scalarMultiply(new BigReal("-1")));
-//            FieldMatrix<BigReal> h = inverseMassMatrix.multiply(g);
+//            writeToFile("=== speed " + (i-1) + " ===");
+//            printMatrix(speed[i-1]);
+//
+            acceleration[i] = inverseMassMatrix.multiply(force[i].add(stiffnessFieldMatrix.multiply(displacement[i]).scalarMultiply(MINUS_ONE)));
+//            writeToFile("=== acceleration " + i + " ===");
+//            printMatrix(acceleration[i]);
             
-            LOGGER.info("==== " + i + " ====");
-//            printMatrix(displacement[i].add(h.scalarMultiply(new BigReal("-1"))));
-            
-            
-//            LOGGER.info("==== " + i + " ====");
-            printMatrix(displacement[i]);
+            writeToFile("=== force " + i + " ===");
+            printMatrix(force[i]);
         }
         
-        System.out.println("Total time: " + (System.nanoTime() - startTime)/1000000000.0 + "s");
-        printElements(elements, displacement);
+        writeToFile("Total time: " + (System.nanoTime() - startTime)/1000000000.0 + "s");
+        printElements(elements, displacement, speed, acceleration, force);
         
-        System.out.println(elasticity);
     }
 
     private static void setElementTwoStiffnessMatrix(List<Cst> elements,
@@ -493,15 +488,6 @@ public class Application {
                 new Point(new BigDecimal(i*10+10), new BigDecimal(j*10+10)), 
                 new Point(new BigDecimal(i*10), new BigDecimal(j*10+10)));
         elements.add(element);
-
-//                System.out.println("==== 1 elem ====");
-//                System.out.println(m11 + "\t" + m12 + "\t" + m13 + "\t" + m14 + "\t" + m15 + "\t" + m16);
-//                System.out.println(m21 + "\t" + m22 + "\t" + m23 + "\t" + m24 + "\t" + m25 + "\t" + m26);
-//                System.out.println(m31 + "\t" + m32 + "\t" + m33 + "\t" + m34 + "\t" + m35 + "\t" + m36);
-//                System.out.println(m41 + "\t" + m42 + "\t" + m43 + "\t" + m44 + "\t" + m45 + "\t" + m46);
-//                System.out.println(m51 + "\t" + m52 + "\t" + m53 + "\t" + m54 + "\t" + m55 + "\t" + m56);
-//                System.out.println(m61 + "\t" + m62 + "\t" + m63 + "\t" + m64 + "\t" + m65 + "\t" + m66);
-        
 
         //top left corner
         stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2].add(m11el1);
@@ -680,41 +666,31 @@ public class Application {
         massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
     }
 
-    private static void setLogger() {
-        FileHandler fh;
-        try {
-            // This block configure the logger with handler and formatter  
-            fh = new FileHandler("log.txt");  
-            LOGGER.addHandler(fh);
-            SimpleFormatter formatter = new SimpleFormatter();  
-            fh.setFormatter(formatter);  
-
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private static void printMatrix(FieldMatrix<BigReal> fieldMatrix) {
         
-        LOGGER.info("====  ====");
+        writeToFile("====  ====");
         StringBuilder str = new StringBuilder();
         for (BigReal[] column : fieldMatrix.getData()) {
             
             for (BigReal unit : column) {
-                str.append(unit.bigDecimalValue().toPlainString()).append("\t");
+                str.append(df.format(unit.bigDecimalValue())).append("\t");
             }
             str.append("\n");
         }
-        LOGGER.info(str.toString());
+        writeToFile(str.toString());
         
     }
 
-    private static void printElements(List<Cst> elements, FieldMatrix<BigReal>[] displacement) {
+    private static void writeToFile(String string) {
+        UtilWriter.writeToFile(string);
+        UtilWriter.writeToFile("\n");
+    }
+
+    private static void printElements(List<Cst> elements, FieldMatrix<BigReal>[] displacement, 
+            FieldMatrix<BigReal>[] speed, FieldMatrix<BigReal>[] acceleration, FieldMatrix<BigReal>[] force) {
         final String title = "Test Window";
-        final int width = 1200;
-        final int height = width / 16 * 9;
+        final int width = 30*(numX+2);
+        final int height = 30*(numY+3);
 
         //Creating the frame.
         JFrame frame = new JFrame(title);
@@ -751,28 +727,61 @@ public class Application {
             graphics.clearRect(0, 0, width, height);
 
             graphics.setColor(Color.GREEN);
-            graphics.clearRect(0, 0, 1000, 1000);
+            graphics.clearRect(0, 0, 30*(numX+2), 30*(numY+3));
 
             for (int m = 0; m <= numY; m++) {
                 for (int n = 0; n <= numX; n++) {
-                    graphics.drawOval(n*30 + displacement[i].getData()[m*numX+n][0].bigDecimalValue()
-                            .multiply(new BigDecimal("10000"))
-                            .intValue(), m*30 + displacement[i].getData()[m*numX+n+1][0].bigDecimalValue()
-                            .multiply(new BigDecimal("10000"))
-                            .intValue(), 10, 10);
+                    int x = n*30 + displacement[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                            .multiply(new BigDecimal("500"))
+                            .intValue();
+                    int y = m*30 + displacement[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                            .multiply(new BigDecimal("500"))
+                            .intValue();
+                    graphics.setColor(Color.GREEN);
+                    graphics.drawOval(x, y, 10, 10);
+//                    if (n < numX) {
+//                        graphics.drawLine(x + 5, y + 5, x + 35, y + 5);
+//                        if (m < numY) {
+//                            graphics.drawLine(x + 5, y + 5, x + 35, y + 35);
+//                            graphics.drawLine(x + 5, y + 35, x + 35, y + 35);
+//                            graphics.drawLine(x + 5, y + 5, x + 5, y + 35);
+//                            graphics.drawLine(x + 35, y + 5, x + 35, y + 35);
+//                        }
+//                    }
+                    if (speed[i] != null) {
+                        graphics.setColor(Color.BLUE);
+                        graphics.drawLine(x + 5, y + 5, 
+                                x + 5 + speed[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                                .intValue(), 
+                                y + 5 + speed[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                                .intValue());
+                    }
+
+                    if (acceleration[i] != null) {
+                        graphics.setColor(Color.RED);
+                        graphics.drawLine(x + 5, y + 5, 
+                                x + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                                .multiply(new BigDecimal("0.001"))
+                                .intValue(), 
+                                y + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                                .multiply(new BigDecimal("0.001"))
+                                .intValue());
+                    }
+                    
+                    if (force[i] != null) {
+                        graphics.setColor(Color.CYAN);
+                        graphics.drawLine(x + 5, y + 5, 
+                                x + 5 + force[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                                .multiply(new BigDecimal("0.001"))
+                                .intValue(), 
+                                y + 5 + force[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                                .multiply(new BigDecimal("0.001"))
+                                .intValue());
+                    }
                 }
             }
             
-            graphics.drawString("t: " + i, 100, 500);
-            
-//            for (Cst element : elements) {
-//                graphics.drawLine(element.getI().x.intValue(), element.getI().y.intValue()
-//                        , element.getJ().x.intValue(), element.getJ().y.intValue());
-//                graphics.drawLine(element.getI().x.intValue(), element.getI().y.intValue()
-//                        , element.getM().x.intValue(), element.getM().y.intValue());
-//                graphics.drawLine(element.getM().x.intValue(), element.getM().y.intValue()
-//                        , element.getJ().x.intValue(), element.getJ().y.intValue());
-//            }
+            graphics.drawString("t: " + i, 100, 30*(numY+1));
 
             bufferStrategy.show();
             graphics.dispose();
@@ -782,11 +791,18 @@ public class Application {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            if (i < 99) {
+            if (i < NUM_TIMES - 1) {
                 i++;
             } else {
                 i = 0;
             }
         }
+    }
+    
+    private static void setDecimalFormat() {
+        df = new DecimalFormat();
+        df.setMaximumFractionDigits(10);
+        df.setMinimumFractionDigits(0);
+        df.setGroupingUsed(false);
     }
 }

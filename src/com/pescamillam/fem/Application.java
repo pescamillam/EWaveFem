@@ -1,17 +1,12 @@
 package com.pescamillam.fem;
 
-import java.awt.Canvas;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.image.BufferStrategy;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.JFrame;
-
+import com.pescamillam.fem.util.UtilWindow;
 import org.apache.commons.math3.linear.FieldLUDecomposition;
 import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -21,16 +16,17 @@ import com.pescamillam.fem.element.Cst;
 import com.pescamillam.fem.element.Point;
 import com.pescamillam.fem.util.UtilWriter;
 
-public class Application {
-    
-    private static final int NUM_TIMES = 100;
-    private static final BigReal FOUR = new BigReal("4");
-    private static final BigReal TWELVE = new BigReal("12");
-    private static final BigReal TWO = new BigReal("2");
-    private static final BigReal MINUS_ONE = new BigReal("-1");
+import static com.pescamillam.fem.util.Constants.FOUR;
+import static com.pescamillam.fem.util.Constants.MINUS_ONE;
+import static com.pescamillam.fem.util.Constants.NUM_TIMES;
+import static com.pescamillam.fem.util.Constants.NUM_X;
+import static com.pescamillam.fem.util.Constants.NUM_Y;
+import static com.pescamillam.fem.util.Constants.TWELVE;
+import static com.pescamillam.fem.util.Constants.TWO;
+import static org.apache.commons.math3.util.BigReal.ONE;
+import static org.apache.commons.math3.util.BigReal.ZERO;
 
-    private static final int numX = 8;
-    private static final int numY = 8;
+public class Application {
     
     private static DecimalFormat df;
     
@@ -82,17 +78,17 @@ public class Application {
         List<Cst> elements = new ArrayList<>();
         
         //Stiffness matrix
-        BigReal[][] stiffnessMatrix = new BigReal[2*numX*numY+2*numX+2*numY+2][2*numX*numY+2*numX+2*numY+2];
+        BigReal[][] stiffnessMatrix = new BigReal[2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2][2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2];
         
         //mass matrix
-        BigReal[][] massMatrix = new BigReal[2*numX*numY+2*numX+2*numY+2][2*numX*numY+2*numX+2*numY+2];
+        BigReal[][] massMatrix = new BigReal[2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2][2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2];
 
         for (BigReal[] row : stiffnessMatrix) {
-            Arrays.fill(row, BigReal.ZERO);
+            Arrays.fill(row, ZERO);
         }
 
         for (BigReal[] row : massMatrix) {
-            Arrays.fill(row, BigReal.ZERO);
+            Arrays.fill(row, ZERO);
         }
         
 
@@ -301,8 +297,8 @@ public class Application {
 
 
         //points matrix
-        for (int i = 0; i < numX; i++) {
-            for (int j = 0; j < numY; j++) {
+        for (int i = 0; i < NUM_X; i++) {
+            for (int j = 0; j < NUM_Y; j++) {
                 setElementOneStiffnessMatrix(elements, stiffnessMatrix, m11el1, m12el1, m13el1,
                         m14el1, m15el1, m16el1, m21el1, m22el1, m23el1, m24el1, m25el1, m26el1,
                         m33el1, m34el1, m35el1, m36el1, m43el1, m44el1, m45el1, m46el1, m55el1,
@@ -313,9 +309,9 @@ public class Application {
                         m33el2, m34el2, m35el2, m36el2, m43el2, m44el2, m45el2, m46el2, m55el2,
                         m56el2, m65el2, m66el2, i, j);
 
-                setElementOneMassMatrix(massMatrix, i, j, TWO, BigReal.ZERO, BigReal.ONE);
+                setElementOneMassMatrix(massMatrix, i, j, TWO, ZERO, ONE);
 
-                setElementTwoMassMatrix(massMatrix, i, j, TWO, BigReal.ZERO, BigReal.ONE);
+                setElementTwoMassMatrix(massMatrix, i, j, TWO, ZERO, ONE);
             }
         }
 
@@ -335,22 +331,28 @@ public class Application {
         
         //force vectors
         BigReal ONE_HUNDRED = new BigReal("30000");
-        BigReal[] force1Vector = new BigReal[2*numX*numY+2*numX+2*numY+2];
-        Arrays.fill(force1Vector, BigReal.ZERO);
+        BigReal[] force1Vector = new BigReal[2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2];
+        Arrays.fill(force1Vector, ZERO);
 //        force1Vector[4] = ONE_HUNDRED;
 //        force1Vector[5] = ONE_HUNDRED;
-        BigReal[] force0Vector = new BigReal[2*numX*numY+2*numX+2*numY+2];
-        Arrays.fill(force0Vector, BigReal.ZERO);
-        force0Vector[5] = ONE_HUNDRED;
+        BigReal[] force0Vector = new BigReal[2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2];
+        Arrays.fill(force0Vector, ZERO);
+        force0Vector[NUM_X*2+2 + ((NUM_X*2)/2+1+6)] = ONE_HUNDRED;
+        BigReal[] vector0 = new BigReal[2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2];
+        Arrays.fill(vector0, ZERO);
 
-//        for (int i = 0; i < numX + 1; i++) {
-//            force0Vector[2*i+1] = ONE_HUNDRED;
-//        }
+
+//        for (int i = 0; i < Constants.NUM_X + 1; i++) {
+//            f
         FieldMatrix<BigReal>[] force = new FieldMatrix[NUM_TIMES];
         for (int i = 0; i < NUM_TIMES; i++) {
-            force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
-//                    .scalarMultiply(new BigReal(Math.sin(i/10.0)))
-                    ;
+            if (i < NUM_TIMES/3) {
+                force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
+                //                    .scalarMultiply(new BigReal(Math.sin(i/10.0)))
+                ;
+            } else {
+                force[i] = MatrixUtils.createColumnFieldMatrix(vector0);
+            }
         }
 
         //acceleration = mass inverse * (F0 - [K]{d0}) as {d0} = 0 
@@ -366,8 +368,8 @@ public class Application {
         printMatrix(displacementM1);
         
         //displacement 1
-        BigReal[] displacement0 = new BigReal[2*numX*numY+2*numX+2*numY+2];
-        Arrays.fill(displacement0, BigReal.ZERO);
+        BigReal[] displacement0 = new BigReal[2* NUM_X* NUM_Y+2* NUM_X+2* NUM_Y+2];
+        Arrays.fill(displacement0, ZERO);
 //        displacement0[5] = BigReal.ONE;
         FieldMatrix<BigReal>[] displacement = new FieldMatrix[NUM_TIMES];
         FieldMatrix<BigReal>[] speed = new FieldMatrix[NUM_TIMES];
@@ -395,7 +397,7 @@ public class Application {
 //            writeToFile("==== displacement " + i + " ====");
 //            printMatrix(displacement[i]);
             
-            speed[i-1] = displacement[i].add(displacement[i-2].scalarMultiply(MINUS_ONE)).scalarMultiply(BigReal.ONE.divide(TWO.multiply(deltaTime)));
+            speed[i-1] = displacement[i].add(displacement[i-2].scalarMultiply(MINUS_ONE)).scalarMultiply(ONE.divide(TWO.multiply(deltaTime)));
 
 //            writeToFile("=== speed " + (i-1) + " ===");
 //            printMatrix(speed[i-1]);
@@ -409,7 +411,7 @@ public class Application {
         }
         
         writeToFile("Total time: " + (System.nanoTime() - startTime)/1000000000.0 + "s");
-        printElements(elements, displacement, speed, acceleration, force);
+        UtilWindow.printElements(elements, displacement, speed, acceleration, force);
         
     }
 
@@ -425,56 +427,56 @@ public class Application {
                 new Point(new BigDecimal(i*10+10), new BigDecimal(j*10+10)));
         elements.add(element2);
         //top left corner
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2].add(m11el2);
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1].add(m12el2);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2].add(m21el2);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1].add(m22el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2].add(m11el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1].add(m12el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2].add(m21el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1].add(m22el2);
 
         //top right corner
-        stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2] = stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2].add(m33el2);
-        stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2+1].add(m34el2);
-        stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2] = stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2].add(m43el2);
-        stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2+1].add(m44el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2].add(m33el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2+1].add(m34el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2].add(m43el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2+1].add(m44el2);
 
         //bottom right corner
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2].add(m55el2);
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1].add(m56el2);
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2].add(m65el2);
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(m66el2);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2].add(m55el2);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m56el2);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(m65el2);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m66el2);
         
         //ij
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2].add(m13el2);
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2+1].add(m14el2);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2].add(m23el2);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2+1].add(m24el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2].add(m13el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2+1].add(m14el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2].add(m23el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2+1].add(m24el2);
         
 
-        stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2];
-        stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2+1];
-        stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2];
-        stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2+1];
         
         //im
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2].add(m15el2);
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1].add(m16el2);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2].add(m25el2);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(m26el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2].add(m15el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m16el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(m25el2);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m26el2);
 
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
         
         //jm
-        stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2].add(m35el2);
-        stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1].add(m36el2);
-        stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2].add(m45el2);
-        stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(m46el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2].add(m35el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m36el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(m45el2);
+        stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m46el2);
 
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+(i+1))*2] = stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+(i+1))*2] = stiffnessMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
     }
 
     private static void setElementOneStiffnessMatrix(List<Cst> elements,
@@ -490,55 +492,55 @@ public class Application {
         elements.add(element);
 
         //top left corner
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2].add(m11el1);
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1].add(m12el1);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2].add(m21el1);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1].add(m22el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2].add(m11el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1].add(m12el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2].add(m21el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1].add(m22el1);
 
         //bottom left corner
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2] = stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2].add(m55el1);
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2+1].add(m56el1);
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2].add(m65el1);
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2+1].add(m66el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2].add(m55el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2+1].add(m56el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2].add(m65el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1].add(m66el1);
 
         //bottom right corner
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2].add(m33el1);
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1].add(m34el1);
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2].add(m43el1);
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(m44el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2].add(m33el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m34el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(m43el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m44el1);
 
         //ij
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2].add(m13el1);
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1].add(m14el1);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2].add(m23el1);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(m24el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2].add(m13el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m14el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(m23el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m24el1);
 
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
 
         //im
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2].add(m15el1);
-        stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2+1].add(m16el1);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2].add(m25el1);
-        stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2+1].add(m26el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2].add(m15el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2+1].add(m16el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2].add(m25el1);
+        stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1].add(m26el1);
 
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2];
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*j+i)*2] = stiffnessMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2+1];
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2];
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*j+i)*2+1] = stiffnessMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*j+i)*2] = stiffnessMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*j+i)*2+1] = stiffnessMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1];
         
         //jm
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2].add(m35el1);
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2].add(m45el1);
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2+1].add(m36el1);
-        stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(m46el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2].add(m35el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(m45el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m36el1);
+        stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(m46el1);
 
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+i)*2] = stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+i)*2] = stiffnessMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2+1];
-        stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+i)*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+i)*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+i)*2] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        stiffnessMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+i)*2+1] = stiffnessMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
     }
 
     private static void setElementTwoMassMatrix(BigReal[][] massMatrix, int i, int j, BigReal two,
@@ -552,56 +554,56 @@ public class Application {
         //     m
 
         //top left corner
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2].add(two);
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1].add(two);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2].add(two);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1].add(two);
 
         //top right corner
-        massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2] = massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2].add(two);
-        massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2+1] = massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2] = massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2+1] = massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+(i+1))*2+1].add(two);
+        massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2] = massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2].add(two);
+        massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2] = massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2+1].add(two);
 
         //bottom right corner
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2].add(two);
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(two);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2].add(two);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(two);
         
         //ij
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2].add(one);
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2+1] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2+1].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2+1].add(one);
         
 
-        massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2];
-        massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+(i+1))*2+1];
-        massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2];
-        massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2];
+        massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2];
+        massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+(i+1))*2+1];
         
         //im
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2].add(one);
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(one);
 
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
         
         //jm
-        massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2].add(one);
-        massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(one);
+        massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2].add(one);
+        massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(one);
 
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+(i+1))*2] = massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+(i+1))*2] = massMatrix[((numX+1)*j+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+(i+1))*2+1] = massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+(i+1))*2+1] = massMatrix[((numX+1)*j+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+(i+1))*2] = massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2] = massMatrix[((NUM_X+1)*j+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
     }
 
     private static void setElementOneMassMatrix(BigReal[][] massMatrix, int i, int j, BigReal two,
@@ -615,55 +617,55 @@ public class Application {
         // m   j
 
         //top left corner
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2].add(two);
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2][((numX+1)*j+i)*2+1].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*j+i)*2+1].add(two);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2].add(two);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*j+i)*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*j+i)*2+1].add(two);
 
         //bottom left corner
-        massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2] = massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2].add(two);
-        massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+i)*2+1].add(zero);
-        massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2].add(zero);
-        massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+i)*2+1].add(two);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2] = massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2].add(two);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2+1] = massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+i)*2+1].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2] = massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1] = massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1].add(two);
 
         //bottom right corner
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2].add(two);
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(two);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2].add(two);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(two);
 
         //ij
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2].add(one);
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(one);
 
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+(i+1))*2+1];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
 
         //im
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2].add(one);
-        massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2+1].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2].add(zero);
-        massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2+1].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2].add(one);
+        massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2+1].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2].add(zero);
+        massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1].add(one);
 
-        massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2];
-        massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*j+i)*2] = massMatrix[((numX+1)*j+i)*2][((numX+1)*(j+1)+i)*2+1];
-        massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2];
-        massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*j+i)*2+1] = massMatrix[((numX+1)*j+i)*2+1][((numX+1)*(j+1)+i)*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2];
+        massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*j+i)*2] = massMatrix[((NUM_X+1)*j+i)*2][((NUM_X+1)*(j+1)+i)*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2];
+        massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*j+i)*2+1] = massMatrix[((NUM_X+1)*j+i)*2+1][((NUM_X+1)*(j+1)+i)*2+1];
         
         //jm
-        massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2].add(one);
-        massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2].add(zero);
-        massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2+1].add(zero);
-        massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1].add(one);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2].add(one);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2] = massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1].add(zero);
+        massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1] = massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1].add(one);
 
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+i)*2] = massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+i)*2] = massMatrix[((numX+1)*(j+1)+i)*2][((numX+1)*(j+1)+(i+1))*2+1];
-        massMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+i)*2+1] = massMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+i)*2] = massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2][((NUM_X+1)*(j+1)+i)*2+1] = massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+i)*2] = massMatrix[((NUM_X+1)*(j+1)+i)*2][((NUM_X+1)*(j+1)+(i+1))*2+1];
+        massMatrix[((NUM_X+1)*(j+1)+(i+1))*2+1][((NUM_X+1)*(j+1)+i)*2+1] = massMatrix[((NUM_X+1)*(j+1)+i)*2+1][((NUM_X+1)*(j+1)+(i+1))*2+1];
     }
 
     private static void printMatrix(FieldMatrix<BigReal> fieldMatrix) {
@@ -686,119 +688,6 @@ public class Application {
         UtilWriter.writeToFile("\n");
     }
 
-    private static void printElements(List<Cst> elements, FieldMatrix<BigReal>[] displacement, 
-            FieldMatrix<BigReal>[] speed, FieldMatrix<BigReal>[] acceleration, FieldMatrix<BigReal>[] force) {
-        final String title = "Test Window";
-        final int width = 30*(numX+2);
-        final int height = 30*(numY+3);
-
-        //Creating the frame.
-        JFrame frame = new JFrame(title);
-
-        frame.setSize(width, height);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
-        frame.setVisible(true);
-
-        //Creating the canvas.
-        Canvas canvas = new Canvas();
-
-        canvas.setSize(width, height);
-        canvas.setBackground(Color.BLACK);
-        canvas.setVisible(true);
-        canvas.setFocusable(false);
-
-
-        //Putting it all together.
-        frame.add(canvas);
-
-        canvas.createBufferStrategy(3);
-
-        boolean running = true;
-
-        BufferStrategy bufferStrategy;
-        Graphics graphics;
-        int i = 0;
-
-        while (running) {
-            bufferStrategy = canvas.getBufferStrategy();
-            graphics = bufferStrategy.getDrawGraphics();
-            graphics.clearRect(0, 0, width, height);
-
-            graphics.setColor(Color.GREEN);
-            graphics.clearRect(0, 0, 30*(numX+2), 30*(numY+3));
-
-            for (int m = 0; m <= numY; m++) {
-                for (int n = 0; n <= numX; n++) {
-                    int x = n*30 + displacement[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                            .multiply(new BigDecimal("500"))
-                            .intValue();
-                    int y = m*30 + displacement[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                            .multiply(new BigDecimal("500"))
-                            .intValue();
-                    graphics.setColor(Color.GREEN);
-                    graphics.drawOval(x, y, 10, 10);
-//                    if (n < numX) {
-//                        graphics.drawLine(x + 5, y + 5, x + 35, y + 5);
-//                        if (m < numY) {
-//                            graphics.drawLine(x + 5, y + 5, x + 35, y + 35);
-//                            graphics.drawLine(x + 5, y + 35, x + 35, y + 35);
-//                            graphics.drawLine(x + 5, y + 5, x + 5, y + 35);
-//                            graphics.drawLine(x + 35, y + 5, x + 35, y + 35);
-//                        }
-//                    }
-                    if (speed[i] != null) {
-                        graphics.setColor(Color.BLUE);
-                        graphics.drawLine(x + 5, y + 5, 
-                                x + 5 + speed[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                .intValue(), 
-                                y + 5 + speed[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                .intValue());
-                    }
-
-                    if (acceleration[i] != null) {
-                        graphics.setColor(Color.RED);
-                        graphics.drawLine(x + 5, y + 5, 
-                                x + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.001"))
-                                .intValue(), 
-                                y + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.001"))
-                                .intValue());
-                    }
-                    
-                    if (force[i] != null) {
-                        graphics.setColor(Color.CYAN);
-                        graphics.drawLine(x + 5, y + 5, 
-                                x + 5 + force[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.001"))
-                                .intValue(), 
-                                y + 5 + force[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.001"))
-                                .intValue());
-                    }
-                }
-            }
-            
-            graphics.drawString("t: " + i, 100, 30*(numY+1));
-
-            bufferStrategy.show();
-            graphics.dispose();
-            try {
-                Thread.sleep(200L);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            if (i < NUM_TIMES - 1) {
-                i++;
-            } else {
-                i = 0;
-            }
-        }
-    }
-    
     private static void setDecimalFormat() {
         df = new DecimalFormat();
         df.setMaximumFractionDigits(10);

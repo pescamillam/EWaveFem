@@ -12,8 +12,18 @@ import org.apache.commons.math3.util.BigReal;
 import com.pescamillam.fem.element.Cst;
 import com.pescamillam.fem.element.Point;
 
+/**
+ * Util class to manage the element one type
+ * 
+ * @author Peter Escamilla (pescamilla@unab.edu.co)
+ */
 public class ElementOne {
 
+    /**
+     * Gets the local stiffness matrix for an element one
+     * @param poisson poisson module as given by input values
+     * @return local stiffness matrix of the element one
+     */
     public static BigReal[][] getLocalStiffnessMatrix(BigReal poisson) {
 
         BigReal[][] localMatrix = new BigReal[6][6];
@@ -103,6 +113,17 @@ public class ElementOne {
         return localMatrix;
     }
 
+
+    /**
+     * Adds a local matrix element one to the global stiffness matrix
+     * 
+     * @param elements list of elements
+     * @param stiffnessMatrix global stiffness matrix
+     * @param localMatrixElementOne local stiffness matrix to add
+     * @param i element placement in X
+     * @param j element placement in Y
+     * @param numX number of elements in X
+     */
     public static void appendElementOneToStiffnessMatrix(List<Cst> elements,
             BigReal[][] stiffnessMatrix, BigReal[][] localMatrixElementOne, int i, int j, Integer numX) {
         Cst element = new Cst(new Point(new BigDecimal(i*10), new BigDecimal(j*10)), 
@@ -162,6 +183,14 @@ public class ElementOne {
         stiffnessMatrix[((numX+1)*(j+1)+(i+1))*2+1][((numX+1)*(j+1)+i)*2+1] = stiffnessMatrix[((numX+1)*(j+1)+i)*2+1][((numX+1)*(j+1)+(i+1))*2+1];
     }
 
+    /**
+     * Adds a local mass matrix element one to the global mass matrix
+     * 
+     * @param massMatrix global mass matrix
+     * @param i element placement in x
+     * @param j element placement in y
+     * @param numX total number of elements in X
+     */
     public static void appendElementOneToMassMatrix(BigReal[][] massMatrix, int i, int j, Integer numX) {
         //element 1
         //

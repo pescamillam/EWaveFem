@@ -10,14 +10,32 @@ import java.awt.image.BufferStrategy;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Util class to show result windows
+ * 
+ * @author Peter Escamilla (pescamilla@unab.edu.co)
+ */
 public class UtilWindow {
     
+    /**
+     * Shows an image with the displacement, speed, acceleration and force of a node
+     * 
+     * @param elements List with all the elements of the grid
+     * @param displacement vector of displacement
+     * @param speed vector of speed
+     * @param acceleration vector of acceleration
+     * @param force vector of force
+     * @param numTimes number of iterations
+     */
     public static void printMovingNode(List<Cst> elements, FieldMatrix<BigReal>[] displacement,
             FieldMatrix<BigReal>[] speed, FieldMatrix<BigReal>[] acceleration, FieldMatrix<BigReal>[] force, Integer numTimes) {
+        //assigns the title of the window
         final String title = "EWaveFem node displacement";
+        //defines the size of the window
         final int width = 1200;
         final int height = 500;
 
+        //creates the window with the given size
         JFrame frame = new JFrame(title);
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -25,7 +43,7 @@ public class UtilWindow {
         frame.setResizable(true);
         frame.setVisible(true);
 
-        //Creating the canvas.
+        //Creating the canvas where the vectors will be drawn
         Canvas canvas = new Canvas();
 
         canvas.setSize(width, height);
@@ -41,19 +59,24 @@ public class UtilWindow {
         Graphics graphics = canvas.getGraphics();
         bufferStrategy = canvas.getBufferStrategy();
         graphics = bufferStrategy.getDrawGraphics();
+        //keeps drawing the vectors
         while (true) {
             graphics.setColor(Color.GREEN);
+            //iterates for every possible time
             for (int i = 0; i < numTimes-1; i++) {
-                for (int j = 8*2+2 + ((8*2)/2+1+6); j < 8*2+2 + ((8*2)/2+1+6) + 1; j++) {
-//                for (int j = 0; j < displacement[i].getData().length; j++) {
+                for (int j = 1; j < 1 + 1; j++) {
+                    //Draws the displacement
                     graphics.setColor(Color.LIGHT_GRAY);
+                    ((Graphics2D)graphics).setStroke(new BasicStroke(3));
                     int y1 = displacement[i].getData()[j][0].bigDecimalValue()
-                        .multiply(new BigDecimal("10000"))
+                        .multiply(new BigDecimal("100"))
                         .intValue();
                     int y2 = displacement[i+1].getData()[j][0].bigDecimalValue()
-                            .multiply(new BigDecimal("10000"))
+                            .multiply(new BigDecimal("100"))
                             .intValue();
                     graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
+                    
+                    //Draws the acceleration
                     if (acceleration[i] != null && acceleration[i+1] != null) {
                         graphics.setColor(Color.GREEN);
                         y1 = acceleration[i].getData()[j][0].bigDecimalValue()
@@ -64,6 +87,8 @@ public class UtilWindow {
                                 .intValue();
                         graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
                     }
+                    
+                    //Draws the speed
                     if (speed[i] != null && speed[i+1] != null) {
                         graphics.setColor(Color.YELLOW);
                         y1 = speed[i].getData()[j][0].bigDecimalValue()
@@ -74,6 +99,8 @@ public class UtilWindow {
                                 .intValue();
                         graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
                     }
+                    
+                    //Draws the force
                     graphics.setColor(Color.CYAN);
                     y1 = force[i].getData()[j][0].bigDecimalValue()
                             .multiply(new BigDecimal("0.002"))
@@ -82,6 +109,11 @@ public class UtilWindow {
                             .multiply(new BigDecimal("0.002"))
                             .intValue();
                     graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
+                    
+                    //Draws a 0 line for reference
+                    graphics.setColor(Color.WHITE);
+                    ((Graphics2D)graphics).setStroke(new BasicStroke(1));
+                    graphics.drawLine(i*5, 250, (i+1)*5, 250);
                 }
                 
             }
@@ -90,6 +122,7 @@ public class UtilWindow {
             graphics.dispose();
 
             try {
+                //keeps drawing every 0.2 seconds
                 Thread.sleep(200L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -98,9 +131,23 @@ public class UtilWindow {
 
     }
 
+    /**
+     * Shows a window with an animation of all the nodes with a line representing speed, acceleration and force for
+     * each node
+     * 
+     * @param elements List with all the elements of the grid
+     * @param displacement vector of displacement
+     * @param speed vector of speed
+     * @param acceleration vector of acceleration
+     * @param force vector of force
+     * @param numX number of elements in X
+     * @param numY number of elements in Y
+     * @param numTimes number of iterations
+     */
     public static void printElements(List<Cst> elements, FieldMatrix<BigReal>[] displacement,
                                       FieldMatrix<BigReal>[] speed, FieldMatrix<BigReal>[] acceleration, FieldMatrix<BigReal>[] force,
                                       Integer numX, Integer numY, Integer numTimes) {
+        //assigns the title of the window
         final String title = "EWaveFem";
         final int width = 30*(numX+2);
         final int height = 30*(numY+3);
@@ -134,6 +181,7 @@ public class UtilWindow {
         Graphics graphics;
         int i = 0;
 
+        //keeps executing to show the animation
         while (running) {
             bufferStrategy = canvas.getBufferStrategy();
             graphics = bufferStrategy.getDrawGraphics();
@@ -144,23 +192,18 @@ public class UtilWindow {
 
             for (int m = 0; m <= numY; m++) {
                 for (int n = 0; n <= numX; n++) {
+
+                    //places the node based on the displacement
                     int x = n*30 + displacement[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                            //.multiply(new BigDecimal("500"))
                             .intValue();
                     int y = m*30 + displacement[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                            //.multiply(new BigDecimal("500"))
                             .intValue();
+
+                    //draws the node
                     graphics.setColor(Color.GREEN);
                     graphics.drawOval(x, y, 10, 10);
-//                    if (n < numX) {
-//                        graphics.drawLine(x + 5, y + 5, x + 35, y + 5);
-//                        if (m < numY) {
-//                            graphics.drawLine(x + 5, y + 5, x + 35, y + 35);
-//                            graphics.drawLine(x + 5, y + 35, x + 35, y + 35);
-//                            graphics.drawLine(x + 5, y + 5, x + 5, y + 35);
-//                            graphics.drawLine(x + 35, y + 5, x + 35, y + 35);
-//                        }
-//                    }
+
+                    //draws the speed vector
                     if (speed[i] != null) {
                         graphics.setColor(Color.BLUE);
                         graphics.drawLine(x + 5, y + 5,
@@ -172,6 +215,7 @@ public class UtilWindow {
                                         .intValue());
                     }
 
+                    //draws the acceleration vector
                     if (acceleration[i] != null) {
                         graphics.setColor(Color.RED);
                         graphics.drawLine(x + 5, y + 5,
@@ -183,6 +227,7 @@ public class UtilWindow {
                                         .intValue());
                     }
 
+                    //draws the force vector
                     if (force[i] != null) {
                         graphics.setColor(Color.CYAN);
                         graphics.drawLine(x + 5, y + 5,
@@ -196,6 +241,7 @@ public class UtilWindow {
                 }
             }
 
+            //draws the current time iteration
             graphics.drawString("t: " + i, 100, 30*(numY+1));
 
             bufferStrategy.show();
@@ -208,6 +254,7 @@ public class UtilWindow {
             if (i < numTimes - 1) {
                 i++;
             } else {
+                //restarts the unit count when reaches the end
                 i = 0;
             }
         }

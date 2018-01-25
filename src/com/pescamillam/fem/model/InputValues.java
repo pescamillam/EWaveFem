@@ -1,5 +1,10 @@
 package com.pescamillam.fem.model;
 
+/**
+ * Pojo class with the input values that the program can receive
+ * 
+ * @author Peter Escamilla (pescamilla@unab.edu.co)
+ */
 public class InputValues {
     private String thickness;
     private String area;
@@ -72,8 +77,11 @@ public class InputValues {
         return numY;
     }
 
-
-
+    /**
+     * Builder to create a InputValues instance easily 
+     * 
+     * @author Peter Escamilla (pescamilla@unab.edu.co)
+     */
     public static class Builder {
         private String thickness;
         private String area;

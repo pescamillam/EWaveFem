@@ -151,12 +151,12 @@ public class Application {
         printMatrix(stiffnessFieldMatrix);
 
         //creates the force vector
-        BigReal ONE_HUNDRED = new BigReal("3000");
+//        BigReal ONE_HUNDRED = new BigReal("3000");
         BigReal[] force0Vector = new BigReal[2 * numX * numY + 2 * numX + 2 * numY + 2];
         Arrays.fill(force0Vector, ZERO);
-        for (int i = 0; i < numX + 1; i++) {
-            force0Vector[i*2+1] = ONE_HUNDRED;
-        }
+//        for (int i = 2; i < numX-2 + 1; i++) {
+//            force0Vector[i*2+1] = ONE_HUNDRED;
+//        }
 
         FieldMatrix<BigReal>[] force = new FieldMatrix[numTimes];
         for (int i = 0; i < numTimes; i++) {
@@ -164,17 +164,17 @@ public class Application {
             //the force vector is a sinosoidal function
 //            force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
 //                    .scalarMultiply(new BigReal(Math.sin(i/9.0)));
-            if (i < 30) {
+//            if (i < 30) {
                 force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector);
-            } else if (i < 70) {
-                force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
-                        .scalarMultiply(new BigReal(i-30))
-                        .scalarMultiply(Constants.MINUS_ONE);
-            } else {
-                force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
-                        .scalarMultiply(new BigReal("20"))
-                        .scalarMultiply(Constants.MINUS_ONE);
-            }
+//            } else if (i < 70) {
+//                force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
+//                        .scalarMultiply(new BigReal(i-30))
+//                        .scalarMultiply(Constants.MINUS_ONE);
+//            } else {
+//                force[i] = MatrixUtils.createColumnFieldMatrix(force0Vector)
+//                        .scalarMultiply(new BigReal("20"))
+//                        .scalarMultiply(Constants.MINUS_ONE);
+//            }
         }
 
         //acceleration = mass inverse * (F0 - [K]{d0}) as {d0} = 0 
@@ -207,6 +207,10 @@ public class Application {
                 //.add(massFieldMatrix.scalarMultiply(TWO_BIG_REAL).add(stiffnessFieldMatrix.scalarMultiply(deltaTime.multiply(deltaTime))).multiply(displacementM1))
                 .add(massFieldMatrix.multiply(displacementM1).scalarMultiply(MINUS_ONE))
                 );
+        
+        for (int i = 1; i < numX*2; i+=2) {
+            displacement[1].setEntry(i, 0, new BigReal(Math.sin(1/9.0)));
+        }
 
         writeToFile("=== displacement 1 ===");
         printMatrix(displacement[1]);
@@ -218,6 +222,14 @@ public class Application {
                                 .add(massFieldMatrix.scalarMultiply(TWO).add(stiffnessFieldMatrix.scalarMultiply(deltaTimeSquare.multiply(MINUS_ONE))).multiply(displacement[i-1]))
                                 .add(massFieldMatrix.multiply(displacement[i-2]).scalarMultiply(MINUS_ONE))
                                 );
+            
+//            for (int j = 1; j < numX*2+2; j+=2) {
+//                displacement[i].setEntry(j, 0, new BigReal(Math.sin(i/9.0)));
+//            }
+//            
+//            for (int j = 0; j < numX*2+2; j+=2) {
+//                displacement[i].setEntry(j, 0, BigReal.ZERO);
+//            }
 
             writeToFile("==== displacement " + i + " ====");
             printMatrix(displacement[i]);

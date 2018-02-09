@@ -64,7 +64,7 @@ public class UtilWindow {
             graphics.setColor(Color.GREEN);
             //iterates for every possible time
             for (int i = 0; i < numTimes-1; i++) {
-                for (int j = 1; j < 1 + 1; j++) {
+                for (int j = 31; j < 31 + 1; j++) {
                     //Draws the displacement
                     graphics.setColor(Color.LIGHT_GRAY);
                     ((Graphics2D)graphics).setStroke(new BasicStroke(3));
@@ -80,10 +80,10 @@ public class UtilWindow {
                     if (acceleration[i] != null && acceleration[i+1] != null) {
                         graphics.setColor(Color.GREEN);
                         y1 = acceleration[i].getData()[j][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.001"))
+                                .multiply(new BigDecimal("0.00001"))
                                 .intValue();
                         y2 = acceleration[i+1].getData()[j][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.001"))
+                                .multiply(new BigDecimal("0.00001"))
                                 .intValue();
                         graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
                     }
@@ -92,10 +92,10 @@ public class UtilWindow {
                     if (speed[i] != null && speed[i+1] != null) {
                         graphics.setColor(Color.YELLOW);
                         y1 = speed[i].getData()[j][0].bigDecimalValue()
-                                .multiply(new BigDecimal("10"))
+                                .multiply(new BigDecimal("0.1"))
                                 .intValue();
                         y2 = speed[i+1].getData()[j][0].bigDecimalValue()
-                                .multiply(new BigDecimal("10"))
+                                .multiply(new BigDecimal("0.1"))
                                 .intValue();
                         graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
                     }
@@ -220,10 +220,10 @@ public class UtilWindow {
                         graphics.setColor(Color.RED);
                         graphics.drawLine(x + 5, y + 5,
                                 x + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.0001"))
+                                        .multiply(new BigDecimal("0.00001"))
                                         .intValue(),
                                 y + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.0001"))
+                                        .multiply(new BigDecimal("0.00001"))
                                         .intValue());
                     }
 

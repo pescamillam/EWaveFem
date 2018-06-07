@@ -20,10 +20,11 @@ public class Constants {
     public static final String DENSITY = "0.00073";
     public static final String AREA = "450";
     public static final String POISSON = "0.3";
-    public static final String DELTA_TIME = "0.00005";
-    public static final String NUM_X = "8";
-    public static final String NUM_Y = "8";
-    public static final String NUM_TIMES = "200";
+    public static final String DELTA_TIME = "0.00003";
+    public static final String NUM_X = "5";
+    public static final String NUM_Y = "7";
+//    public static final String NUM_TIMES = "70";
+    public static final String NUM_TIMES = "70";
 
     public static DecimalFormat DF = new DecimalFormat();
     static {

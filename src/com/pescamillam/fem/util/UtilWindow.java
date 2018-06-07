@@ -28,7 +28,8 @@ public class UtilWindow {
      * @param numTimes number of iterations
      */
     public static void printMovingNode(List<Cst> elements, FieldMatrix<BigReal>[] displacement,
-            FieldMatrix<BigReal>[] speed, FieldMatrix<BigReal>[] acceleration, FieldMatrix<BigReal>[] force, Integer numTimes) {
+            FieldMatrix<BigReal>[] speed, FieldMatrix<BigReal>[] acceleration, FieldMatrix<BigReal>[] force, 
+            Integer numTimes, int numNode) {
         //assigns the title of the window
         final String title = "EWaveFem node displacement";
         //defines the size of the window
@@ -61,10 +62,33 @@ public class UtilWindow {
         graphics = bufferStrategy.getDrawGraphics();
         //keeps drawing the vectors
         while (true) {
+            String label = "Node " + numNode/2 + (numNode%2 == 0 ? " x " : " y ");
+            graphics.setColor(Color.RED);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 10);
+
+            label = "Displacement";
+            graphics.setColor(Color.LIGHT_GRAY);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 20);
+
+            label = "Speed";
+            graphics.setColor(Color.YELLOW);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 30);
+
+            label = "Acceleration";
             graphics.setColor(Color.GREEN);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 40);
+
+            label = "Force";
+            graphics.setColor(Color.CYAN);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 50);
+
+            label = "0 Line";
+            graphics.setColor(Color.WHITE);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 60);
+
             //iterates for every possible time
             for (int i = 0; i < numTimes-1; i++) {
-                for (int j = 31; j < 31 + 1; j++) {
+                for (int j = numNode; j < numNode + 1; j++) {
                     //Draws the displacement
                     graphics.setColor(Color.LIGHT_GRAY);
                     ((Graphics2D)graphics).setStroke(new BasicStroke(3));
@@ -195,8 +219,10 @@ public class UtilWindow {
 
                     //places the node based on the displacement
                     int x = n*30 + displacement[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                            .multiply(new BigDecimal("10"))
                             .intValue();
                     int y = m*30 + displacement[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                            .multiply(new BigDecimal("10"))
                             .intValue();
 
                     //draws the node
@@ -220,10 +246,10 @@ public class UtilWindow {
                         graphics.setColor(Color.RED);
                         graphics.drawLine(x + 5, y + 5,
                                 x + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.00001"))
+                                        .multiply(new BigDecimal("0.000001"))
                                         .intValue(),
                                 y + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.00001"))
+                                        .multiply(new BigDecimal("0.000001"))
                                         .intValue());
                     }
 
@@ -243,6 +269,10 @@ public class UtilWindow {
 
             //draws the current time iteration
             graphics.drawString("t: " + i, 100, 30*(numY+1));
+            graphics.setColor(Color.BLUE);
+            graphics.drawString("Speed", 100, 30*(numY+1)+10);
+            graphics.setColor(Color.RED);
+            graphics.drawString("Acceleration", 100, 30*(numY+1)+20);
 
             bufferStrategy.show();
             graphics.dispose();

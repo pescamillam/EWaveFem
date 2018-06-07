@@ -208,8 +208,8 @@ public class Application {
                 .add(massFieldMatrix.multiply(displacementM1).scalarMultiply(MINUS_ONE))
                 );
         
-        for (int i = 1; i < numX*2; i+=2) {
-            displacement[1].setEntry(i, 0, new BigReal(Math.sin(1/9.0)));
+        for (int i = 1; i < numX*2+2; i+=2) {
+            displacement[1].setEntry(i, 0, new BigReal(Math.sin(1/9.0)).multiply(new BigReal("0.9")));
         }
 
         writeToFile("=== displacement 1 ===");
@@ -222,6 +222,12 @@ public class Application {
                                 .add(massFieldMatrix.scalarMultiply(TWO).add(stiffnessFieldMatrix.scalarMultiply(deltaTimeSquare.multiply(MINUS_ONE))).multiply(displacement[i-1]))
                                 .add(massFieldMatrix.multiply(displacement[i-2]).scalarMultiply(MINUS_ONE))
                                 );
+            
+            displacement[i].setEntry(0, 0, BigReal.ZERO);
+            displacement[i].setEntry(1, 0, BigReal.ZERO);
+            
+            displacement[i].setEntry((numX+1)*2, 0, BigReal.ZERO);
+            displacement[i].setEntry((numX+1)*2+1, 0, BigReal.ZERO);
             
 //            for (int j = 1; j < numX*2+2; j+=2) {
 //                displacement[i].setEntry(j, 0, new BigReal(Math.sin(i/9.0)));
@@ -257,12 +263,16 @@ public class Application {
                 UtilWindow.printElements(elements, displacement, speed, acceleration, force, numX, numY, numTimes);
             }
         }).start();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                UtilWindow.printMovingNode(elements, displacement, speed, acceleration, force, numTimes);
-            }
-        }).start();
+
+        for (int i = 1; i < elements.size(); i+=10) {
+            final int a = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                        UtilWindow.printMovingNode(elements, displacement, speed, acceleration, force, numTimes, a);
+                }
+            }).start();
+        }
     }
 
     private static void printMatrix(FieldMatrix<BigReal> fieldMatrix) {

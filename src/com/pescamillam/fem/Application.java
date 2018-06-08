@@ -264,15 +264,15 @@ public class Application {
             }
         }).start();
 
-        for (int i = 1; i < elements.size(); i+=10) {
-            final int a = i;
+//        for (int i = 1; i < elements.size(); i+=10) {
+            final int a = 11;
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                         UtilWindow.printMovingNode(elements, displacement, speed, acceleration, force, numTimes, a);
                 }
             }).start();
-        }
+//        }
     }
 
     private static void printMatrix(FieldMatrix<BigReal> fieldMatrix) {

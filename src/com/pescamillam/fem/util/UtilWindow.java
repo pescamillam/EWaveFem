@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 
 /**
@@ -16,6 +17,8 @@ import java.util.List;
  * @author Peter Escamilla (pescamilla@unab.edu.co)
  */
 public class UtilWindow {
+
+    static final DecimalFormat DF = new DecimalFormat("0.###E0");
     
     /**
      * Shows an image with the displacement, speed, acceleration and force of a node
@@ -62,29 +65,18 @@ public class UtilWindow {
         graphics = bufferStrategy.getDrawGraphics();
         //keeps drawing the vectors
         while (true) {
-            String label = "Node " + numNode/2 + (numNode%2 == 0 ? " x " : " y ");
-            graphics.setColor(Color.RED);
-            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 10);
 
-            label = "Displacement";
-            graphics.setColor(Color.LIGHT_GRAY);
-            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 20);
+            BigDecimal minDisplacement = new BigDecimal(Double.MAX_VALUE);
+            BigDecimal maxDisplacement = new BigDecimal(Double.MIN_VALUE);
 
-            label = "Speed";
-            graphics.setColor(Color.YELLOW);
-            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 30);
+            BigDecimal minSpeed = new BigDecimal(Double.MAX_VALUE);
+            BigDecimal maxSpeed = new BigDecimal(Double.MIN_VALUE);
 
-            label = "Acceleration";
-            graphics.setColor(Color.GREEN);
-            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 40);
+            BigDecimal minAcceleration = new BigDecimal(Double.MAX_VALUE);
+            BigDecimal maxAcceleration = new BigDecimal(Double.MIN_VALUE);
 
-            label = "Force";
-            graphics.setColor(Color.CYAN);
-            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 50);
-
-            label = "0 Line";
-            graphics.setColor(Color.WHITE);
-            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 60);
+            BigDecimal minForce = new BigDecimal(Double.MAX_VALUE);
+            BigDecimal maxForce = new BigDecimal(Double.MIN_VALUE);
 
             //iterates for every possible time
             for (int i = 0; i < numTimes-1; i++) {
@@ -99,7 +91,14 @@ public class UtilWindow {
                             .multiply(new BigDecimal("100"))
                             .intValue();
                     graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
-                    
+
+                    if (displacement[i].getData()[j][0].bigDecimalValue().compareTo(maxDisplacement) > 0) {
+                        maxDisplacement = displacement[i].getData()[j][0].bigDecimalValue();
+                    }
+                    if (displacement[i].getData()[j][0].bigDecimalValue().compareTo(minDisplacement) < 0) {
+                        minDisplacement = displacement[i].getData()[j][0].bigDecimalValue();
+                    }
+
                     //Draws the acceleration
                     if (acceleration[i] != null && acceleration[i+1] != null) {
                         graphics.setColor(Color.GREEN);
@@ -110,18 +109,32 @@ public class UtilWindow {
                                 .multiply(new BigDecimal("0.00001"))
                                 .intValue();
                         graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
+
+                        if (acceleration[i].getData()[j][0].bigDecimalValue().compareTo(maxAcceleration) > 0) {
+                            maxAcceleration = acceleration[i].getData()[j][0].bigDecimalValue();
+                        }
+                        if (acceleration[i].getData()[j][0].bigDecimalValue().compareTo(minAcceleration) < 0) {
+                            minAcceleration = acceleration[i].getData()[j][0].bigDecimalValue();
+                        }
                     }
                     
                     //Draws the speed
                     if (speed[i] != null && speed[i+1] != null) {
                         graphics.setColor(Color.YELLOW);
                         y1 = speed[i].getData()[j][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.1"))
+                                .multiply(new BigDecimal("0.06"))
                                 .intValue();
                         y2 = speed[i+1].getData()[j][0].bigDecimalValue()
-                                .multiply(new BigDecimal("0.1"))
+                                .multiply(new BigDecimal("0.06"))
                                 .intValue();
                         graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
+
+                        if (speed[i].getData()[j][0].bigDecimalValue().compareTo(maxSpeed) > 0) {
+                            maxSpeed = speed[i].getData()[j][0].bigDecimalValue();
+                        }
+                        if (speed[i].getData()[j][0].bigDecimalValue().compareTo(minSpeed) < 0) {
+                            minSpeed = speed[i].getData()[j][0].bigDecimalValue();
+                        }
                     }
                     
                     //Draws the force
@@ -133,6 +146,13 @@ public class UtilWindow {
                             .multiply(new BigDecimal("0.002"))
                             .intValue();
                     graphics.drawLine(i*5, y1+250, (i+1)*5, y2+250);
+
+                    if (force[i].getData()[j][0].bigDecimalValue().compareTo(maxForce) > 0) {
+                        maxForce = force[i].getData()[j][0].bigDecimalValue();
+                    }
+                    if (force[i].getData()[j][0].bigDecimalValue().compareTo(minForce) < 0) {
+                        minForce = force[i].getData()[j][0].bigDecimalValue();
+                    }
                     
                     //Draws a 0 line for reference
                     graphics.setColor(Color.WHITE);
@@ -141,6 +161,38 @@ public class UtilWindow {
                 }
                 
             }
+
+            String label = "Node " + numNode/2 + (numNode%2 == 0 ? " x " : " y ");
+            graphics.setColor(Color.RED);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 10);
+
+            label = "Displacement";
+            graphics.setColor(Color.LIGHT_GRAY);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 20);
+            label = "max: " + DF.format(maxDisplacement) + " inches min " + DF.format(minDisplacement) + " inches";
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 100, 20);
+
+            label = "Speed";
+            graphics.setColor(Color.YELLOW);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 30);
+            label = "max: " + DF.format(maxSpeed) + " in/s min " + DF.format(minSpeed) + " in/s";
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 100, 30);
+
+            label = "Acceleration";
+            graphics.setColor(Color.GREEN);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 40);
+            label = "max: " + DF.format(maxAcceleration) + " in/s2 min " + DF.format(minAcceleration) + " in/s2";
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 100, 40);
+
+            label = "Force";
+            graphics.setColor(Color.CYAN);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 50);
+            label = "max: " + DF.format(maxForce) + " pound/in2 min " + DF.format(minForce) + " pound/in2";
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 100, 50);
+
+            label = "0 Line";
+            graphics.setColor(Color.WHITE);
+            graphics.drawChars(label.toCharArray(), 0, label.length(), 10, 60);
             
             bufferStrategy.show();
             graphics.dispose();
@@ -174,7 +226,7 @@ public class UtilWindow {
         //assigns the title of the window
         final String title = "EWaveFem";
         final int width = 30*(numX+2);
-        final int height = 30*(numY+3);
+        final int height = 30*(numY+4);
 
         //Creating the frame.
         JFrame frame = new JFrame(title);
@@ -268,11 +320,19 @@ public class UtilWindow {
             }
 
             //draws the current time iteration
-            graphics.drawString("t: " + i, 100, 30*(numY+1));
+            graphics.drawString("t: " + i, 10, 30*(numY+1));
             graphics.setColor(Color.BLUE);
-            graphics.drawString("Speed", 100, 30*(numY+1)+10);
+            graphics.drawString("Speed", 10, 30*(numY+1)+10);
+            graphics.drawLine(80, 30*(numY+1)+5, 90, 30*(numY+1)+5);
+            graphics.drawString(DF.format(new BigDecimal("1000")) + " in/s", 95, 30*(numY+1)+10);
             graphics.setColor(Color.RED);
-            graphics.drawString("Acceleration", 100, 30*(numY+1)+20);
+            graphics.drawString("Acceleration", 10, 30*(numY+1)+20);
+            graphics.drawLine(80, 30*(numY+1)+15, 90, 30*(numY+1)+15);
+            graphics.drawString(DF.format(new BigDecimal("10000000")) + " in/s2", 95, 30*(numY+1)+20);
+            graphics.setColor(Color.CYAN);
+            graphics.drawString("Force", 10, 30*(numY+1)+30);
+            graphics.drawLine(80, 30*(numY+1)+25, 90, 30*(numY+1)+25);
+            graphics.drawString(DF.format(new BigDecimal("10000")) + " pound/in2", 95, 30*(numY+1)+30);
 
             bufferStrategy.show();
             graphics.dispose();

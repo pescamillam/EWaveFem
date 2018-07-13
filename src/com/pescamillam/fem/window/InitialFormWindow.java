@@ -25,11 +25,11 @@ public class InitialFormWindow {
     /** Field text for number of iterations */
     private static JTextField numTimesText = new JTextField(String.valueOf(Constants.NUM_TIMES));
 
-    private static JLabel widthLabel = new JLabel("Ancho del dominio");
+    private static JLabel widthLabel = new JLabel("Ancho del dominio (metros)");
 
     private static JTextField widthText = new JTextField(String.valueOf(Constants.DEFAULT_WIDTH));
 
-    private static JLabel heightLabel = new JLabel("Alto del dominio");
+    private static JLabel heightLabel = new JLabel("Alto del dominio (metros)");
 
     private static JTextField heightText = new JTextField(String.valueOf(Constants.DEFAULT_HEIGHT));
 
@@ -44,22 +44,22 @@ public class InitialFormWindow {
     private static JTextField numYText = new JTextField(String.valueOf(Constants.NUM_Y));
 
     /** Label for thickness field */
-    private static JLabel thicknessLabel = new JLabel("Grosor");
+    private static JLabel thicknessLabel = new JLabel("Grosor (metros)");
     /** Text Field for thickness value */
     private static JTextField thicknessText = new JTextField(Constants.THICKNESS);
 
     /** Label for elasticity field */
-    private static JLabel elasticityLabel = new JLabel("Elasticidad");
+    private static JLabel elasticityLabel = new JLabel("Elasticidad (N/m^2)");
     /** Text field for elasticity value */
     private static JTextField elasticityText = new JTextField(Constants.ELASTICITY);
 
     /** Label for density field */
-    private static JLabel densityLabel = new JLabel("Densidad");
+    private static JLabel densityLabel = new JLabel("Densidad (Kg/m^3)");
     /** Text field for density value */
     private static JTextField densityText = new JTextField(Constants.DENSITY);
 
     /** Label for element area field */
-    private static JLabel areaLabel = new JLabel("Area");
+    private static JLabel areaLabel = new JLabel("Area (m^2)");
     /** Text field for element area value */
     private static JTextField areaText = new JTextField(Constants.AREA);
 
@@ -69,9 +69,14 @@ public class InitialFormWindow {
     private static JTextField poissonText = new JTextField(Constants.POISSON);
 
     /** Label for delta time field */
-    private static JLabel deltaTimeLabel = new JLabel("Delta Time");
+    private static JLabel deltaTimeLabel = new JLabel("Delta Time (segundos)");
     /** Text field for delta time value */
     private static JTextField deltaTimeText = new JTextField(Constants.DELTA_TIME);
+
+    /** Label for the initial displacement field */
+    private static JLabel initialDisplacementLabel = new JLabel("Desplazamiento inicial (metros)");
+    /** Text field for the initial displacement value */
+    private static JTextField initialDisplacementText = new JTextField(Constants.DEFAULT_INITIAL_DISPLACEMENT);
 
     /** Frame object where the form will be shown */
     private static JFrame frame;
@@ -79,7 +84,7 @@ public class InitialFormWindow {
     /** Creates the form with a squared layout */
     public static void createFormInitialValues() {
         //Assigns a grid layout of 12 rows and 2 columns
-        JPanel p = new JPanel(new GridLayout(14, 2, 10, 10));
+        JPanel p = new JPanel(new GridLayout(15, 2, 10, 10));
 
         addMargin();
 
@@ -115,6 +120,9 @@ public class InitialFormWindow {
         
         p.add(deltaTimeLabel);
         p.add(deltaTimeText);
+
+        p.add(initialDisplacementLabel);
+        p.add(initialDisplacementText);
 
         // button to start the process
         JButton button = new JButton("Ejecutar");
@@ -154,7 +162,7 @@ public class InitialFormWindow {
         areaLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
         poissonLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
         deltaTimeLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
-
+        initialDisplacementLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
     }
 
     //Thread with the processing part to be executed in background
@@ -174,6 +182,7 @@ public class InitialFormWindow {
                     .withNumX(numXText.getText())
                     .withNumY(numYText.getText())
                     .withNumTimes(numTimesText.getText())
+                    .withInitialDisplacement(initialDisplacementText.getText())
                     .build());
         }
     }

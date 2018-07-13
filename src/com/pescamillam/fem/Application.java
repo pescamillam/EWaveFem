@@ -215,7 +215,7 @@ public class Application {
                 );
         
         for (int i = 1; i < numX*2+2; i+=2) {
-            displacement[1].setEntry(i, 0, new BigReal(Math.sin(1/9.0)).multiply(new BigReal("0.9")));
+            displacement[1].setEntry(i, 0, new BigReal(input.getInitialDisplacement()));
         }
 
         writeToFile("=== displacement 1 ===");

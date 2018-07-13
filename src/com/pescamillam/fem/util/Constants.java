@@ -27,6 +27,7 @@ public class Constants {
     public static final String NUM_TIMES = "70";
     public static final String DEFAULT_WIDTH = "50";
     public static final String DEFAULT_HEIGHT = "60";
+    public static final String DEFAULT_INITIAL_DISPLACEMENT = "0.09";
 
 
     public static DecimalFormat DF = new DecimalFormat();

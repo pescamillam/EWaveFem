@@ -17,9 +17,10 @@ public class InputValues {
     private String numTimes;
     private String numX;
     private String numY;
+    private String initialDisplacement;
 
     public InputValues(String width, String height, String thickness, String area, String elasticity, String density,
-            String poisson, String deltaTime, String numTimes, String numX, String numY) {
+            String poisson, String deltaTime, String numTimes, String numX, String numY, String initialDisplacement) {
         this.width = width;
         this.height = height;
         this.thickness = thickness;
@@ -31,6 +32,7 @@ public class InputValues {
         this.numTimes = numTimes;
         this.numX = numX;
         this.numY = numY;
+        this.initialDisplacement = initialDisplacement;
     }
 
     public String getWidth() {
@@ -89,6 +91,9 @@ public class InputValues {
         return numY;
     }
 
+    public String getInitialDisplacement() {
+        return initialDisplacement;
+    }
     /**
      * Builder to create a InputValues instance easily 
      * 
@@ -106,6 +111,7 @@ public class InputValues {
         private String numTimes;
         private String numX;
         private String numY;
+        private String initialDisplacement;
 
         public Builder withWidth(String width) {
             this.width = width;
@@ -161,10 +167,15 @@ public class InputValues {
             this.numY = numY;
             return this;
         }
+
+        public Builder withInitialDisplacement(String initialDisplacement) {
+            this.initialDisplacement = initialDisplacement;
+            return this;
+        }
         
         public InputValues build() {
             return new InputValues(width, height, thickness, area, elasticity, density, poisson,
-                    deltaTime, numTimes, numX, numY);
+                    deltaTime, numTimes, numX, numY, initialDisplacement);
         }
         
     }

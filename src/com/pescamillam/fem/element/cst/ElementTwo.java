@@ -7,6 +7,7 @@ import static org.apache.commons.math3.util.BigReal.ZERO;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.pescamillam.fem.util.Constants;
 import org.apache.commons.math3.util.BigReal;
 
 import com.pescamillam.fem.element.Cst;
@@ -24,7 +25,7 @@ public class ElementTwo {
      * @param poisson poisson module as given by input values
      * @return local stiffness matrix of the element two
      */
-    public static BigReal[][] getLocalStiffnessMatrix(BigReal poisson) {
+    public static BigReal[][] getLocalStiffnessMatrix(BigReal width, BigReal height, BigReal poisson) {
 
         BigReal[][] localMatrix = new BigReal[6][6];
 
@@ -43,18 +44,18 @@ public class ElementTwo {
         //     m
         
         //beta i: y_j - y_m
-        BigReal betaIel2 = new BigReal("-30");
+        BigReal betaIel2 = height.multiply(Constants.MINUS_ONE);
         //beta j: y_m - y_i
-        BigReal betaJel2 = new BigReal("30");
+        BigReal betaJel2 = height;
         //beta m: y_i - y_j
-        BigReal betaMel2 = new BigReal("0");
+        BigReal betaMel2 = BigReal.ZERO;
         
         //gamma_i: x_m - x_j
-        BigReal gammaIel2 = new BigReal("0");
+        BigReal gammaIel2 = BigReal.ZERO;
         //gamma_j: x_i - x_m
-        BigReal gammaJel2 = new BigReal("-30");
+        BigReal gammaJel2 = width.multiply(Constants.MINUS_ONE);
         //gamma_m: x_j - x_i
-        BigReal gammaMel2 = new BigReal("30");
+        BigReal gammaMel2 = width;
         
         //1-1
         localMatrix[0][0] = betaIel2.multiply(betaIel2).multiply(poisson1mv).add(gammaIel2.multiply(gammaIel2).multiply(poisson1m2vo2));

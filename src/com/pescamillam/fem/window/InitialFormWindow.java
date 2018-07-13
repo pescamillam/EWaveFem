@@ -4,16 +4,13 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import com.pescamillam.fem.Application;
 import com.pescamillam.fem.model.InputValues;
 import com.pescamillam.fem.util.Constants;
+import com.sun.org.apache.bcel.internal.classfile.ConstantString;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 
 
 /**
@@ -27,6 +24,14 @@ public class InitialFormWindow {
     private static JLabel numTimesLabel = new JLabel("Número de iteraciones");
     /** Field text for number of iterations */
     private static JTextField numTimesText = new JTextField(String.valueOf(Constants.NUM_TIMES));
+
+    private static JLabel widthLabel = new JLabel("Ancho del dominio");
+
+    private static JTextField widthText = new JTextField(String.valueOf(Constants.DEFAULT_WIDTH));
+
+    private static JLabel heightLabel = new JLabel("Alto del dominio");
+
+    private static JTextField heightText = new JTextField(String.valueOf(Constants.DEFAULT_HEIGHT));
 
     /** Label for number of elements in X */
     private static JLabel numXLabel = new JLabel("Número de elementos a lo ancho");
@@ -74,7 +79,15 @@ public class InitialFormWindow {
     /** Creates the form with a squared layout */
     public static void createFormInitialValues() {
         //Assigns a grid layout of 12 rows and 2 columns
-        JPanel p = new JPanel(new GridLayout(12, 2, 10, 10));
+        JPanel p = new JPanel(new GridLayout(14, 2, 10, 10));
+
+        addMargin();
+
+        p.add(widthLabel);
+        p.add(widthText);
+
+        p.add(heightLabel);
+        p.add(heightText);
         
         p.add(numTimesLabel);
         p.add(numTimesText);
@@ -128,13 +141,30 @@ public class InitialFormWindow {
         frame.pack();
         frame.setVisible(true);
     }
-    
+
+    private static void addMargin() {
+        widthLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        heightLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        numTimesLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        numXLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        numYLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        thicknessLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        elasticityLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        densityLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        areaLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        poissonLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+        deltaTimeLabel.setBorder(BorderFactory.createEmptyBorder(0,20,0,20));
+
+    }
+
     //Thread with the processing part to be executed in background
     private static class ExecutionThread implements Runnable {
         @Override
         public void run() {
             // Starts the processing with the entered values
             Application.executeFiniteElementProcess(new InputValues.Builder()
+                    .withWidth(widthText.getText())
+                    .withHeight(heightText.getText())
                     .withArea(areaText.getText())
                     .withThickness(thicknessText.getText())
                     .withDensity(densityText.getText())

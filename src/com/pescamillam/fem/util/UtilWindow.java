@@ -225,8 +225,8 @@ public class UtilWindow {
                                       Integer numX, Integer numY, Integer numTimes) {
         //assigns the title of the window
         final String title = "EWaveFem";
-        final int width = 30*(numX+2);
-        final int height = 30*(numY+4);
+        final int width = 60*(numX+2);
+        final int height = 60*(numY+4);
 
         //Creating the frame.
         JFrame frame = new JFrame(title);
@@ -254,13 +254,14 @@ public class UtilWindow {
         boolean running = true;
 
         BufferStrategy bufferStrategy;
-        Graphics graphics;
+        Graphics2D graphics;
         int i = 0;
 
         //keeps executing to show the animation
         while (running) {
             bufferStrategy = canvas.getBufferStrategy();
-            graphics = bufferStrategy.getDrawGraphics();
+            graphics = (Graphics2D)bufferStrategy.getDrawGraphics();
+            graphics.setStroke(new BasicStroke(2));
             graphics.clearRect(0, 0, width, height);
 
             graphics.setColor(Color.GREEN);
@@ -270,69 +271,77 @@ public class UtilWindow {
                 for (int n = 0; n <= numX; n++) {
 
                     //places the node based on the displacement
-                    int x = n*30 + displacement[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                            .multiply(new BigDecimal("10"))
+                    int x = n*60 + displacement[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                            .multiply(new BigDecimal("30"))
                             .intValue();
-                    int y = m*30 + displacement[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                            .multiply(new BigDecimal("10"))
+                    int y = m*60 + displacement[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                            .multiply(new BigDecimal("30"))
                             .intValue();
 
                     //draws the node
                     graphics.setColor(Color.GREEN);
-                    graphics.drawOval(x, y, 10, 10);
+                    graphics.drawOval(x, y, 20, 20);
 
+                    graphics.setStroke(new BasicStroke(4));
                     //draws the speed vector
                     if (speed[i] != null) {
                         graphics.setColor(Color.BLUE);
-                        graphics.drawLine(x + 5, y + 5,
-                                x + 5 + speed[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.01"))
+                        graphics.drawLine(x + 10, y + 10,
+                                x + 10 + speed[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                                        .multiply(new BigDecimal("0.02"))
                                         .intValue(),
-                                y + 5 + speed[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.01"))
+                                y + 10 + speed[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                                        .multiply(new BigDecimal("0.02"))
                                         .intValue());
                     }
 
                     //draws the acceleration vector
                     if (acceleration[i] != null) {
                         graphics.setColor(Color.RED);
-                        graphics.drawLine(x + 5, y + 5,
-                                x + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.000001"))
+                        graphics.drawLine(x + 10, y + 10,
+                                x + 10 + acceleration[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                                        .multiply(new BigDecimal("0.000003"))
                                         .intValue(),
-                                y + 5 + acceleration[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
-                                        .multiply(new BigDecimal("0.000001"))
+                                y + 10 + acceleration[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                                        .multiply(new BigDecimal("0.000003"))
                                         .intValue());
                     }
 
                     //draws the force vector
                     if (force[i] != null) {
                         graphics.setColor(Color.CYAN);
-                        graphics.drawLine(x + 5, y + 5,
-                                x + 5 + force[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
+                        graphics.drawLine(x + 10, y + 10,
+                                x + 10 + force[i].getData()[m*(numX+1)*2+n*2][0].bigDecimalValue()
                                         .multiply(new BigDecimal("0.001"))
                                         .intValue(),
-                                y + 5 + force[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
+                                y + 10 + force[i].getData()[m*(numX+1)*2+n*2+1][0].bigDecimalValue()
                                         .multiply(new BigDecimal("0.001"))
                                         .intValue());
                     }
+                    graphics.setStroke(new BasicStroke(2));
                 }
             }
 
             //draws the current time iteration
-            graphics.drawString("t: " + i, 10, 30*(numY+1));
+            graphics.drawString("t: " + i, 10, 60*(numY+1));
             graphics.setColor(Color.BLUE);
-            graphics.drawString("Speed", 10, 30*(numY+1)+10);
-            graphics.drawLine(80, 30*(numY+1)+5, 90, 30*(numY+1)+5);
-            graphics.drawString(DF.format(new BigDecimal("1000")) + " in/s", 95, 30*(numY+1)+10);
+            graphics.drawString("Speed", 10, 60*(numY+1)+15);
+            graphics.setStroke(new BasicStroke(4));
+            graphics.drawLine(80, 60*(numY+1)+10, 90, 60*(numY+1)+10);
+            graphics.setStroke(new BasicStroke(2));
+            graphics.drawString(DF.format(new BigDecimal("1000")) + " in/s", 95, 60*(numY+1)+15);
             graphics.setColor(Color.RED);
-            graphics.drawString("Acceleration", 10, 30*(numY+1)+20);
-            graphics.drawLine(80, 30*(numY+1)+15, 90, 30*(numY+1)+15);
-            graphics.drawString(DF.format(new BigDecimal("10000000")) + " in/s2", 95, 30*(numY+1)+20);
+            graphics.drawString("Acceleration", 10, 60*(numY+1)+30);
+            graphics.setStroke(new BasicStroke(4));
+            graphics.drawLine(80, 60*(numY+1)+25, 90, 60*(numY+1)+25);
+            graphics.setStroke(new BasicStroke(2));
+            graphics.drawString(DF.format(new BigDecimal("10000000")) + " in/s2", 95, 60*(numY+1)+30);
             graphics.setColor(Color.CYAN);
-            graphics.drawString("Force", 10, 30*(numY+1)+30);
-            graphics.drawLine(80, 30*(numY+1)+25, 90, 30*(numY+1)+25);
-            graphics.drawString(DF.format(new BigDecimal("10000")) + " pound/in2", 95, 30*(numY+1)+30);
+            graphics.drawString("Force", 10, 60*(numY+1)+45);
+            graphics.setStroke(new BasicStroke(4));
+            graphics.drawLine(80, 60*(numY+1)+40, 90, 60*(numY+1)+40);
+            graphics.setStroke(new BasicStroke(2));
+            graphics.drawString(DF.format(new BigDecimal("10000")) + " pound/in2", 95, 60*(numY+1)+45);
 
             bufferStrategy.show();
             graphics.dispose();

@@ -54,6 +54,10 @@ public class Application {
         Long startTime = System.nanoTime();
         
         //parameters
+        //width w
+        BigReal width = new BigReal(input.getWidth());
+        //height h
+        BigReal height = new BigReal(input.getHeight());
         //thickness t
         BigReal thickness = new BigReal(input.getThickness());
         //elasticity module E
@@ -114,10 +118,12 @@ public class Application {
         
 
         //Stiffness matrix for local element one
-        BigReal[][] localMatrixElemOne = ElementOne.getLocalStiffnessMatrix(poisson);
+        BigReal[][] localMatrixElemOne = ElementOne.getLocalStiffnessMatrix(width.divide(new BigReal(numX)),
+                height.divide(new BigReal(numY)), poisson);
 
         //Stiffness matrix for local element two
-        BigReal[][] localMatrixElemTwo = ElementTwo.getLocalStiffnessMatrix(poisson);
+        BigReal[][] localMatrixElemTwo = ElementTwo.getLocalStiffnessMatrix(width.divide(new BigReal(numX)),
+                height.divide(new BigReal(numY)), poisson);
 
         //points matrix
         for (int i = 0; i < numX; i++) {

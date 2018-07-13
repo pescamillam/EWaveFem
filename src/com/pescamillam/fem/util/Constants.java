@@ -25,6 +25,9 @@ public class Constants {
     public static final String NUM_Y = "7";
 //    public static final String NUM_TIMES = "70";
     public static final String NUM_TIMES = "70";
+    public static final String DEFAULT_WIDTH = "50";
+    public static final String DEFAULT_HEIGHT = "60";
+
 
     public static DecimalFormat DF = new DecimalFormat();
     static {

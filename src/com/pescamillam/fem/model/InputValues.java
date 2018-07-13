@@ -6,6 +6,8 @@ package com.pescamillam.fem.model;
  * @author Peter Escamilla (pescamilla@unab.edu.co)
  */
 public class InputValues {
+    private String width;
+    private String height;
     private String thickness;
     private String area;
     private String elasticity;
@@ -16,8 +18,10 @@ public class InputValues {
     private String numX;
     private String numY;
 
-    public InputValues(String thickness, String area, String elasticity, String density,
+    public InputValues(String width, String height, String thickness, String area, String elasticity, String density,
             String poisson, String deltaTime, String numTimes, String numX, String numY) {
+        this.width = width;
+        this.height = height;
         this.thickness = thickness;
         this.area = area;
         this.elasticity = elasticity;
@@ -27,6 +31,14 @@ public class InputValues {
         this.numTimes = numTimes;
         this.numX = numX;
         this.numY = numY;
+    }
+
+    public String getWidth() {
+        return width;
+    }
+
+    public String getHeight() {
+        return height;
     }
 
     public String getThickness() {
@@ -83,6 +95,8 @@ public class InputValues {
      * @author Peter Escamilla (pescamilla@unab.edu.co)
      */
     public static class Builder {
+        private String width;
+        private String height;
         private String thickness;
         private String area;
         private String elasticity;
@@ -92,6 +106,16 @@ public class InputValues {
         private String numTimes;
         private String numX;
         private String numY;
+
+        public Builder withWidth(String width) {
+            this.width = width;
+            return this;
+        }
+
+        public Builder withHeight(String height) {
+            this.height = height;
+            return this;
+        }
         
         public Builder withThickness(String thickness) {
             this.thickness = thickness;
@@ -139,7 +163,8 @@ public class InputValues {
         }
         
         public InputValues build() {
-            return new InputValues(thickness, area, elasticity, density, poisson, deltaTime, numTimes, numX, numY);
+            return new InputValues(width, height, thickness, area, elasticity, density, poisson,
+                    deltaTime, numTimes, numX, numY);
         }
         
     }
